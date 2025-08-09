@@ -50,10 +50,15 @@ jobs:
         run: npm run tauri build
 
       # Step 8: Upload the final .dmg installer as a workflow artifact
-      - name: Upload artifact
+      - name: Upload DMG artifact
         uses: actions/upload-artifact@v4
         with:
-          # The name of the artifact to be uploaded
-          name: macos-app-installer
-          # The path to the generated DMG file
-          path: target/release/bundle/dmg/*.dmg
+          name: macos-dmg-installer
+          path: src-tauri/target/release/bundle/dmg/*.dmg
+
+      # Step 9: Upload the final .app file as a workflow artifact
+      - name: Upload APP artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-app
+          path: src-tauri/target/release/bundle/macos/*.app
