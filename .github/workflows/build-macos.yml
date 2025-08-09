@@ -1,15 +1,10 @@
-name: 'Build macOS App'
+name: 'publish'
 
-# This workflow is triggered on pushes and pull requests to the main branch
 on:
   push:
     branches:
-      - main
-  pull_request:
-    branches:
-      - main
+      - release
 
-# Define the jobs to run
 jobs:
   publish-tauri:
     permissions:
