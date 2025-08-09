@@ -1,0 +1,57 @@
+name: 'Build macOS App'
+
+# This workflow is triggered on pushes and pull requests to the main branch
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+# Define the jobs to run
+jobs:
+  build-macos:
+    # This job will run on a virtual macOS machine provided by GitHub
+    runs-on: macos-latest
+
+    steps:
+      # Step 1: Check out the code from your repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Install Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # Step 3: Install Rust for the Tauri backend
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      # Step 4: Run backend tests to ensure code quality
+      - name: Run tests
+        run: cargo test --verbose
+
+      # Step 5: Install the Tauri CLI
+      - name: Install Tauri CLI
+        run: cargo install tauri-cli
+
+      # Step 6: Install frontend dependencies
+      - name: Install npm dependencies
+        run: npm install
+
+      # Step 7: Build the Tauri application for release
+      # This command will compile the Rust and bundle the frontend
+      - name: Build Tauri app
+        run: npm run tauri build
+
+      # Step 8: Upload the final .dmg installer as a workflow artifact
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          # The name of the artifact to be uploaded
+          name: macos-app-installer
+          # The path to the generated DMG file
+          path: target/release/bundle/dmg/*.dmg
