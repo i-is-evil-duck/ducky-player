@@ -32,7 +32,9 @@ jobs:
 
       # Step 4: Run backend tests to ensure code quality
       - name: Run tests
+        # The working-directory is set to 'src-tauri' so cargo can find the Cargo.toml file
         run: cargo test --verbose
+        working-directory: src-tauri
 
       # Step 5: Install the Tauri CLI
       - name: Install Tauri CLI
