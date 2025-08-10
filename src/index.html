@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gemini MP3 Player</title>
-    <script src="https://cdn.jsdelivr.net/npm/jsmediatags@3.9.7/dist/jsmediatags.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/colorthief@2.3.2/dist/color-thief.umd.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
+    <script src="/dist/jsmediatags.min.js"></script>
+    <script src="/dist/color-thief.umd.js"></script>
+    <script src="/dist/tailwind.css"></script>
+    <link rel="stylesheet" href="dist/css2.css">
     <style>
 #message-box {
     position: fixed;
@@ -29,6 +29,8 @@
         :root {
             --accent-color: 64, 64, 64; /* Default Dark Grey */
             --accent-color-dark: 40, 40, 40; /* A darker shade for hover effects */
+            --text-color: 255, 255, 255; /* Default White */
+            --icon-color: 255, 255, 255; /* Default White */
         }
         body {
             font-family: 'Inter', sans-serif;
@@ -163,13 +165,21 @@
         .accent-range-thumb::-webkit-slider-thumb {
             background-color: rgb(var(--accent-color));
         }
+        
+        button.accent-bg svg {
+            fill: rgb(var(--icon-color));
+        }
+
+        .dynamic-text-color {
+            color: rgb(var(--text-color));
+        }
     </style>
 </head>
 <body class="bg-zinc-900 text-white flex items-center justify-center min-h-screen p-4">
     <div id="app-container" class="bg-zinc-800 bg-opacity-70 backdrop-blur-md rounded-2xl shadow-2xl p-6 md:p-8 flex flex-col md:flex-row gap-8 w-[800px] h-[480px] transition-all duration-300">        <div class="flex-shrink-0 w-full md:w-1/3 flex flex-col items-center transition-all duration-300">
             <img id="cover-art" src="https://placehold.co/400x400/27272a/fafafa?text=No+Cover" alt="Album Cover" class="w-full h-auto max-w-md rounded-xl shadow-lg aspect-square object-cover transition-transform duration-300 transform-gpu hover:scale-105">
             <div class="scrolling-container mt-4 text-2xl font-bold text-center">
-                <h2 id="current-title" class="truncated">No song playing</h2>
+                <h2 id="current-title" class="truncated text-white">No song playing</h2>
             </div>
             <p id="current-artist" class="text-zinc-400 text-center truncate">Select or drag & drop a file</p>
         </div>
@@ -234,7 +244,7 @@
                     </button>
                     <button id="lyrics-btn" class="p-2 rounded-full hover:bg-zinc-700 transition-colors" title="Lyrics">
                         <svg class="w-6 h-6 text-zinc-300" fill="currentColor" viewBox="0 0 256 256">
-                            <path d="M32,128a8.00008,8.00008,0,0,1,8-8H160a8,8,0,0,1,0,16H40A8.00008,8.00008,0,0,1,32,128Zm8-56H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16Zm202.29883,44.3374-40-12A7.99991,7.99991,0,0,0,192,112v52.30518A31.98859,31.98859,0,1,0,208,192V122.75244l29.70117,8.91016a8,8,0,1,0,4.59766-15.3252ZM112,184H40a8,8,0,0,0,0,16h72a8,8,0,0,0,0-16Z"/>
+                            <path d="M32,128a8.00008,8.00008,0,0,1,8-8H160a8,0,0,1,0,16H40A8.00008,8.00008,0,0,1,32,128Zm8-56H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16Zm202.29883,44.3374-40-12A7.99991,7.99991,0,0,0,192,112v52.30518A31.98859,31.98859,0,1,0,208,192V122.75244l29.70117,8.91016a8,8,0,1,0,4.59766-15.3252ZM112,184H40a8,8,0,0,0,0,16h72a8,8,0,0,0,0-16Z"/>
                         </svg>                    </button>
                 </div>
                 <div class="flex items-center gap-2 mt-4 w-full">
@@ -318,15 +328,12 @@
         // --- Utility Functions ---
 
         function showMessage(text) {
-    messageText.textContent = text;
-    // Show the message
-    messageBox.classList.add('active');
-    // Hide the message after 3 seconds
-    setTimeout(() => {
-        messageBox.classList.remove('active');
-    }, 3000);
-}
-
+            messageText.textContent = text;
+            messageBox.classList.add('active');
+            setTimeout(() => {
+                messageBox.classList.remove('active');
+            }, 3000);
+        }
 
         function formatTime(seconds) {
             const minutes = Math.floor(seconds / 60);
@@ -399,6 +406,11 @@
             }
             return newArray;
         }
+        
+        function getLuminance(r, g, b) {
+            // Rec. 709 luminance calculation
+            return (0.2126 * r + 0.7152 * g + 0.0722 * b);
+        }
 
         function updateBackground(imageUrl) {
             let styleElement = document.getElementById('dynamic-background-style');
@@ -445,12 +457,12 @@
                 const isCurrent = (isShuffling ? shuffledPlaylist.findIndex(s => s.originalFileName === playlist[currentSongIndex]?.originalFileName) : currentSongIndex) === index;
                 const isPlayable = filesMap.has(song.originalFileName);
                 const li = document.createElement('li');
-                li.className = `p-2 rounded-lg cursor-pointer transition-colors flex items-center justify-between text-zinc-300 relative group queue-item ${isCurrent ? 'accent-bg text-white' : 'hover:bg-zinc-600'} ${isPlayable ? '' : 'opacity-50'}`;
+                li.className = `p-2 rounded-lg cursor-pointer transition-colors flex items-center justify-between relative group queue-item ${isCurrent ? 'accent-bg' : 'hover:bg-zinc-600'} ${isPlayable ? '' : 'opacity-50'}`;
                 
                 li.innerHTML = `
                     <div class="flex-grow">
-                        <div class="font-semibold truncate">${song.title}</div>
-                        <div class="text-sm text-zinc-400 truncate ${isCurrent ? 'text-zinc-200' : ''}">${song.artist}</div>
+                        <div class="font-semibold truncate ${isCurrent ? 'dynamic-text-color' : 'text-white'}">${song.title}</div>
+                        <div class="text-sm truncate ${isCurrent ? 'dynamic-text-color' : 'text-zinc-400'}">${song.artist}</div>
                     </div>
                     <button class="remove-btn absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full bg-red-600 text-white opacity-0 transition-opacity duration-200 hover:bg-red-700 pointer-events-none" title="Remove song">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
@@ -528,13 +540,27 @@
                         try {
                             const rgb = colorThief.getColor(img);
                             document.documentElement.style.setProperty('--accent-color', `${rgb[0]}, ${rgb[1]}, ${rgb[2]}`);
+                            
                             // Calculate a darker shade for hover effect
                             const darkRgb = rgb.map(c => Math.max(0, c - 40));
                             document.documentElement.style.setProperty('--accent-color-dark', `${darkRgb[0]}, ${darkRgb[1]}, ${darkRgb[2]}`);
+                            
+                            // Determine if accent color is bright or dark
+                            const luminance = getLuminance(rgb[0], rgb[1], rgb[2]);
+                            if (luminance > 128) {
+                                document.documentElement.style.setProperty('--text-color', '40, 40, 40');
+                                document.documentElement.style.setProperty('--icon-color', '40, 40, 40');
+                            } else {
+                                document.documentElement.style.setProperty('--text-color', '255, 255, 255');
+                                document.documentElement.style.setProperty('--icon-color', '255, 255, 255');
+                            }
+                            
                         } catch (e) {
                             console.error("ColorThief failed:", e);
                             document.documentElement.style.setProperty('--accent-color', '74, 144, 226');
                             document.documentElement.style.setProperty('--accent-color-dark', '50, 110, 180');
+                            document.documentElement.style.setProperty('--text-color', '255, 255, 255');
+                            document.documentElement.style.setProperty('--icon-color', '255, 255, 255');
                         }
                     };
                     img.src = song.coverArtUrl;
@@ -543,9 +569,11 @@
                 } else {
                     coverArt.src = `https://placehold.co/400x400/27272a/fafafa?text=${encodeURIComponent(song.title)}`;
                     updateBackground(null);
-                    // Reset to default color
+                    // Reset to default colors
                     document.documentElement.style.setProperty('--accent-color', '74, 144, 226');
                     document.documentElement.style.setProperty('--accent-color-dark', '50, 110, 180');
+                    document.documentElement.style.setProperty('--text-color', '255, 255, 255');
+                    document.documentElement.style.setProperty('--icon-color', '255, 255, 255');
                 }
 
                 displayLyrics();
@@ -557,9 +585,11 @@
                 currentTitle.classList.add('truncated');
                 updateBackground(null);
                 displayLyrics();
-                // Reset to default color
+                // Reset to default colors
                 document.documentElement.style.setProperty('--accent-color', '74, 144, 226');
                 document.documentElement.style.setProperty('--accent-color-dark', '50, 110, 180');
+                document.documentElement.style.setProperty('--text-color', '255, 255, 255');
+                document.documentElement.style.setProperty('--icon-color', '255, 255, 255');
             }
             
             // Re-apply correct active classes after UI update
@@ -575,56 +605,38 @@
         // --- Core Player Logic ---
 
         function playSong(index, shouldPlay = true) {
-    if (index < 0 || index >= playlist.length) {
-        return;
-    }
+            if (index < 0 || index >= playlist.length) {
+                return;
+            }
 
-    const song = playlist[index];
-    const file = filesMap.get(song.originalFileName);
+            const song = playlist[index];
+            const file = filesMap.get(song.originalFileName);
 
-    if (!file) {
-        showMessage(`File "${song.originalFileName}" not found. Please re-add it.`);
-        return;
-    }
+            if (!file) {
+                showMessage(`File "${song.originalFileName}" not found. Please re-add it.`);
+                return;
+            }
 
-    if (currentSongIndex !== index) {
-        if (audioPlayer.src) {
-            URL.revokeObjectURL(audioPlayer.src);
-        }
-        const url = URL.createObjectURL(file);
-        audioPlayer.src = url;
-    }
-
-    currentSongIndex = index;
-    updateUI();
-    
-    if (shouldPlay) {
-        audioPlayer.play().catch(e => {
-            console.error("Play failed:", e);
-            showMessage("Autoplay failed. Please click play.");
-        });
-    }
-
-    isPlaying = shouldPlay; // Correctly set the state
-    updatePlayPauseButton(); // Add a new function to handle this
-    saveState();
+            if (currentSongIndex !== index) {
+                if (audioPlayer.src) {
+                    URL.revokeObjectURL(audioPlayer.src);
+                }
+                const url = URL.createObjectURL(file);
+                audioPlayer.src = url;
+            }
 
             currentSongIndex = index;
             updateUI();
+            
             if (shouldPlay) {
                 audioPlayer.play().catch(e => {
                     console.error("Play failed:", e);
                     showMessage("Autoplay failed. Please click play.");
                 });
-                isPlaying = true;
-            } else {
-                isPlaying = false;
             }
 
-            playIcon.classList.toggle('hidden', isPlaying);
-            pauseIcon.classList.toggle('hidden', !isPlaying);
-            playPauseBtn.classList.toggle('accent-bg', isPlaying);
-
+            isPlaying = shouldPlay;
+            updatePlayPauseButton();
             saveState();
         }
 
@@ -658,12 +670,11 @@
             showMessage(`Removed "${songToRemove.title}" from the queue.`);
         }
 
-    function updatePlayPauseButton() {
-    playIcon.classList.toggle('hidden', isPlaying);
-    pauseIcon.classList.toggle('hidden', !isPlaying);
-    playPauseBtn.classList.toggle('accent-bg', isPlaying);
-}
-
+        function updatePlayPauseButton() {
+            playIcon.classList.toggle('hidden', isPlaying);
+            pauseIcon.classList.toggle('hidden', !isPlaying);
+            playPauseBtn.classList.toggle('accent-bg', isPlaying);
+        }
 
         function doClearAllSongs() {
             playlist = [];
@@ -690,22 +701,22 @@
         }
 
         function togglePlayPause() {
-    if (playlist.length === 0) return;
-    
-    if (isPlaying) {
-        audioPlayer.pause();
-        isPlaying = false;
-    } else {
-        if (currentSongIndex === -1) {
-            playSong(0, true);
-            isPlaying = true;
-        } else {
-            audioPlayer.play();
-            isPlaying = true;
+            if (playlist.length === 0) return;
+            
+            if (isPlaying) {
+                audioPlayer.pause();
+                isPlaying = false;
+            } else {
+                if (currentSongIndex === -1) {
+                    playSong(0, true);
+                    isPlaying = true;
+                } else {
+                    audioPlayer.play();
+                    isPlaying = true;
+                }
+            }
+            updatePlayPauseButton();
         }
-    }
-    updatePlayPauseButton(); // Call the new function
-}
 
         function nextSong() {
             if (playlist.length === 0) return;
